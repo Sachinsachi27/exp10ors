@@ -5,10 +5,14 @@ pipeline {
     environment {
         REGISTRY = "localhost:5000"
         IMAGE_NAME = "anil-demo-app"
+
         PYTHON = "C:\\Users\\STUDENT\\AppData\\Local\\Programs\\Python\\Python313\\python.exe"
+
+        DOCKER = "C:\\Users\\STUDENT\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe"
     }
 
     stages {
+
         stage('1. Checkout Code') {
             steps {
                 checkout scm
@@ -29,26 +33,48 @@ pipeline {
             }
         }
 
-        stage('3. Build & Tag Docker Image') {
+        stage('3. Docker Verification') {
             steps {
-                bat "docker build -t ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} -t ${REGISTRY}/${IMAGE_NAME}:latest ."
+                echo "Checking Docker installation..."
+
+                bat '"%DOCKER%" --version'
+
+                echo "Checking Docker Engine status..."
+
+                bat '"%DOCKER%" info'
             }
         }
 
-        stage('4. Push Image to Registry') {
+        stage('4. Build & Tag Docker Image') {
             steps {
-                bat "docker push ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}"
-                bat "docker push ${REGISTRY}/${IMAGE_NAME}:latest"
+                echo "Building Docker image..."
+
+                bat '"%DOCKER%" build -t %REGISTRY%/%IMAGE_NAME%:%BUILD_NUMBER% -t %REGISTRY%/%IMAGE_NAME%:latest .'
+            }
+        }
+
+        stage('5. Push Image to Registry') {
+            steps {
+                echo "Pushing versioned image..."
+
+                bat '"%DOCKER%" push %REGISTRY%/%IMAGE_NAME%:%BUILD_NUMBER%'
+
+                echo "Pushing latest image..."
+
+                bat '"%DOCKER%" push %REGISTRY%/%IMAGE_NAME%:latest'
             }
         }
     }
 
     post {
         success {
-            echo "Pipeline succeeded! Image ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} is available locally and in the registry."
+            echo "Pipeline succeeded!"
+            echo "Image: ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}"
+            echo "Latest: ${REGISTRY}/${IMAGE_NAME}:latest"
         }
+
         failure {
-            echo "Pipeline failed. Please check the Jenkins console output."
+            echo "Pipeline failed. Please check Jenkins console output."
         }
     }
 }
