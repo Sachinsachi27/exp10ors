@@ -1,9 +1,11 @@
+
 pipeline {
     agent any
 
     environment {
         REGISTRY = "localhost:5000"
         IMAGE_NAME = "anil-demo-app"
+        PYTHON = "C:\\Users\\STUDENT\\AppData\\Local\\Programs\\Python\\Python313\\python.exe"
     }
 
     stages {
@@ -14,18 +16,18 @@ pipeline {
         }
 
         stage('2. Application Build & Test') {
-    steps {
-        echo "Checking Python installation..."
+            steps {
+                echo "Checking Python installation..."
 
-        bat '"C:\\Users\\STUDENT\\AppData\\Local\\Programs\\Python\\Python313\\python.exe" --version'
+                bat '"%PYTHON%" --version'
 
-        echo "Verifying Python syntax..."
+                echo "Verifying Python syntax..."
 
-        bat '"C:\\Users\\STUDENT\\AppData\\Local\\Programs\\Python\\Python313\\python.exe" -m py_compile app.py'
+                bat '"%PYTHON%" -m py_compile app.py'
 
-        echo "Python syntax verification successful!"
-    }
-}
+                echo "Python syntax verification successful!"
+            }
+        }
 
         stage('3. Build & Tag Docker Image') {
             steps {
@@ -44,6 +46,9 @@ pipeline {
     post {
         success {
             echo "Pipeline succeeded! Image ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} is available locally and in the registry."
+        }
+        failure {
+            echo "Pipeline failed. Please check the Jenkins console output."
         }
     }
 }
